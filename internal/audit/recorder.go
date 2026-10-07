@@ -27,6 +27,9 @@ func (r *Recorder) Record(entry Entry) (Entry, error) {
 	if entry.At.IsZero() {
 		entry.At = time.Now().UTC()
 	}
+	if entry.Severity == "" {
+		entry.Severity = SeverityInfo
+	}
 	event := store.Event{
 		ID:       entry.ID,
 		Kind:     "audit." + entry.Action,
@@ -34,9 +37,10 @@ func (r *Recorder) Record(entry Entry) (Entry, error) {
 		Message:  entry.Message,
 		At:       entry.At,
 		Fields: map[string]any{
-			"actor":   entry.Actor,
-			"outcome": entry.Outcome,
-			"details": entry.Details,
+			"actor":    entry.Actor,
+			"outcome":  entry.Outcome,
+			"severity": entry.Severity,
+			"details":  entry.Details,
 		},
 	}
 	if err := r.log.Append(event); err != nil {

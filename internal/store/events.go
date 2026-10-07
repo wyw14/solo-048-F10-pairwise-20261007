@@ -18,6 +18,11 @@ type Event struct {
 	Message  string         `json:"message"`
 	At       time.Time      `json:"at"`
 	Fields   map[string]any `json:"fields,omitempty"`
+	// Seq is the event's position in the append-only log, assigned from its
+	// line number when the log is read. It is never persisted; because the
+	// log is append-only, an existing event's Seq never changes and new
+	// appends always receive a larger Seq than anything already read.
+	Seq uint64 `json:"-"`
 }
 
 type EventLog struct {
@@ -67,6 +72,7 @@ func (l *EventLog) List(limit int) ([]Event, error) {
 		if err := json.Unmarshal(scanner.Bytes(), &event); err != nil {
 			return nil, fmt.Errorf("decode event: %w", err)
 		}
+		event.Seq = uint64(len(items))
 		items = append(items, event)
 	}
 	if err := scanner.Err(); err != nil {
